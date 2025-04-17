@@ -21,24 +21,30 @@ def validar_email(email: str) -> bool:
     """Verifica se o e-mail contém '@' e '.'."""
     return '@' in email and '.' in email
 
+def solicitar_input(mensagem: str, validacao: callable = None, erro: str = None) -> str:
+    """Solicita e valida uma entrada do usuário."""
+    while True:
+        entrada = input(mensagem).strip()
+        if validacao and not validacao(entrada):
+            print(erro or "❌ Entrada inválida.")
+        else:
+            return entrada
+
 def solicitar_nome() -> str:
     """Solicita e valida o nome do usuário."""
-    while True:
-        nome = input("Nome: ").strip()
-        if not nome:
-            print("❌ Erro: O nome não pode estar vazio.")
-        elif nome.replace(" ", "").isdigit():
-            print("❌ Erro: O nome não pode conter apenas números.")
-        else:
-            return nome
+    return solicitar_input(
+        "Nome: ",
+        validacao=lambda nome: nome and not nome.replace(" ", "").isdigit(),
+        erro="❌ Erro: O nome não pode estar vazio ou conter apenas números."
+    )
 
 def solicitar_email() -> str:
     """Solicita e valida o e-mail do usuário."""
-    while True:
-        email = input("E-mail: ").strip()
-        if validar_email(email):
-            return email
-        print("❌ Erro: O e-mail deve conter '@' e '.' (exemplo: usuario@provedor.com).")
+    return solicitar_input(
+        "E-mail: ",
+        validacao=validar_email,
+        erro="❌ Erro: O e-mail deve conter '@' e '.' (exemplo: usuario@provedor.com)."
+    )
 
 def solicitar_idade() -> int:
     """Solicita e valida a idade do usuário."""
@@ -63,13 +69,11 @@ def cadastrar_usuario():
 
 def exibir_usuario(usuario: dict, com_indice: bool = False, indice: int = None):
     """Exibe os detalhes de um usuário formatados."""
+    detalhes = f"  Nome: {usuario['nome']} | E-mail: {usuario['email']} | Idade: {usuario['idade']}"
     if com_indice and indice:
-        print(f"\nUsuário {indice}:")
-        print(f"  Nome: {usuario['nome']}")
-        print(f"  E-mail: {usuario['email']}")
-        print(f"  Idade: {usuario['idade']}")
+        print(f"\nUsuário {indice}:\n{detalhes}")
     else:
-        print(f"  Nome: {usuario['nome']} | E-mail: {usuario['email']} | Idade: {usuario['idade']}")
+        print(detalhes)
 
 def listar_usuarios():
     """Lista todos os usuários cadastrados."""
@@ -107,18 +111,17 @@ def exibir_menu():
 
 def executar():
     """Controla o fluxo principal da aplicação."""
+    opcoes = {
+        "1": cadastrar_usuario,
+        "2": listar_usuarios,
+        "3": buscar_usuario,
+        "4": lambda: print(MSG_SAINDO) or exit()
+    }
     while True:
         exibir_menu()
         opcao = input("\nEscolha uma opção: ").strip()
-        
-        match opcao:
-            case "1": cadastrar_usuario()
-            case "2": listar_usuarios()
-            case "3": buscar_usuario()
-            case "4": 
-                print(MSG_SAINDO)
-                break
-            case _: print(MSG_OPCAO_INVALIDA)
+        acao = opcoes.get(opcao, lambda: print(MSG_OPCAO_INVALIDA))
+        acao()
 
 # Inicialização do sistema
 if __name__ == "__main__":
