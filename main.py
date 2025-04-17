@@ -3,84 +3,123 @@ Sistema de Cadastro de Usuários - Console
 Autor: Jadson Lago
 Descrição: Aplicação em Python para cadastrar, listar (com paginação) e buscar usuários.
 """
-# Sistema de Cadastro de Usuários
 
-# Lista em memória para armazenar os usuários
+# Constantes para mensagens
+MSG_CABECALHO = "\n" + "=" * 30
+MSG_MENU = "MENU PRINCIPAL"
+MSG_OPCAO_INVALIDA = "❌ Opção inválida. Tente novamente."
+MSG_SUCESSO_CADASTRO = "✅ Usuário cadastrado com sucesso!"
+MSG_SAINDO = "\nSaindo do sistema..."
+
+# Lista em memória para armazenar usuários
 usuarios = []
 
-def cadastrar_usuario():
-    """Cadastra um novo usuário solicitando nome, e-mail e idade."""
-    print("\nCadastro de Usuário")
-    nome = input("Nome: ").strip()
-    email = input("E-mail: ").strip()
-    
-    # Validação da idade (deve ser um número inteiro)
-    while True:
-        idade = input("Idade: ").strip()
-        try:
-            idade = int(idade)
-            break
-        except ValueError:
-            print("Erro: A idade deve ser um número inteiro. Tente novamente.")
-    
-    # Adiciona o usuário à lista
-    usuarios.append({"nome": nome, "email": email, "idade": idade})
-    print("✅ Usuário cadastrado com sucesso!")
+# --------------------------------------------
+# Validações e Entradas de Dados
+# --------------------------------------------
+def validar_email(email: str) -> bool:
+    """Verifica se o e-mail contém '@' e '.'."""
+    return '@' in email and '.' in email
 
+def solicitar_nome() -> str:
+    """Solicita e valida o nome do usuário."""
+    while True:
+        nome = input("Nome: ").strip()
+        if not nome:
+            print("❌ Erro: O nome não pode estar vazio.")
+        elif nome.replace(" ", "").isdigit():
+            print("❌ Erro: O nome não pode conter apenas números.")
+        else:
+            return nome
+
+def solicitar_email() -> str:
+    """Solicita e valida o e-mail do usuário."""
+    while True:
+        email = input("E-mail: ").strip()
+        if validar_email(email):
+            return email
+        print("❌ Erro: O e-mail deve conter '@' e '.' (exemplo: usuario@provedor.com).")
+
+def solicitar_idade() -> int:
+    """Solicita e valida a idade do usuário."""
+    while True:
+        try:
+            return int(input("Idade: ").strip())
+        except ValueError:
+            print("❌ Erro: A idade deve ser um número inteiro.")
+
+# --------------------------------------------
+# Funcionalidades do Sistema
+# --------------------------------------------
+def cadastrar_usuario():
+    """Realiza o cadastro de um novo usuário."""
+    print("\nCadastro de Usuário")
+    usuarios.append({
+        "nome": solicitar_nome(),
+        "email": solicitar_email(),
+        "idade": solicitar_idade()
+    })
+    print(MSG_SUCESSO_CADASTRO)
+
+def exibir_usuario(usuario: dict, com_indice: bool = False, indice: int = None):
+    """Exibe os detalhes de um usuário formatados."""
+    if com_indice and indice:
+        print(f"\nUsuário {indice}:")
+        print(f"  Nome: {usuario['nome']}")
+        print(f"  E-mail: {usuario['email']}")
+        print(f"  Idade: {usuario['idade']}")
+    else:
+        print(f"  Nome: {usuario['nome']} | E-mail: {usuario['email']} | Idade: {usuario['idade']}")
 
 def listar_usuarios():
-    """Lista todos os usuários cadastrados no console."""
+    """Lista todos os usuários cadastrados."""
     print("\nLista de Usuários:")
     if not usuarios:
         print("Nenhum usuário cadastrado.")
         return
     
-    # Exibe os detalhes de cada usuário
     for indice, usuario in enumerate(usuarios, 1):
-        print(f"\nUsuário {indice}:")
-        print(f"  Nome: {usuario['nome']}")
-        print(f"  E-mail: {usuario['email']}")
-        print(f"  Idade: {usuario['idade']}")
-
+        exibir_usuario(usuario, com_indice=True, indice=indice)
 
 def buscar_usuario():
-    """Busca usuários pelo nome (case-insensitive e parcial)."""
+    """Busca usuários por nome (parcial e case-insensitive)."""
     termo = input("\nDigite o nome para busca: ").strip().lower()
-    resultados = []
+    resultados = [u for u in usuarios if termo in u["nome"].lower()]
     
-    for usuario in usuarios:
-        # Verifica se o termo está contido no nome (ignorando maiúsculas/minúsculas)
-        if termo in usuario["nome"].lower():
-            resultados.append(usuario)
-    
-    # Exibe os resultados
     print(f"\n🔍 Resultados para '{termo}':")
     if not resultados:
         print("Nenhum usuário encontrado.")
     else:
         for usuario in resultados:
-            print(f"  Nome: {usuario['nome']} | E-mail: {usuario['email']} | Idade: {usuario['idade']}")
+            exibir_usuario(usuario)
 
-
-# Menu principal
-while True:
-    print("\n" + "=" * 30)
-    print("MENU PRINCIPAL")
+# --------------------------------------------
+# Controle do Menu
+# --------------------------------------------
+def exibir_menu():
+    """Exibe o menu principal formatado."""
+    print(MSG_CABECALHO)
+    print(MSG_MENU)
     print("1. Cadastrar usuário")
     print("2. Listar usuários")
     print("3. Buscar usuário por nome")
     print("4. Sair")
-    
-    opcao = input("Escolha uma opção: ").strip()
-    
-    if opcao == "1":
-        cadastrar_usuario()
-    elif opcao == "2":
-        listar_usuarios()
-    elif opcao == "3":
-        buscar_usuario()
-    elif opcao == "4":
-        print("\nSaindo do sistema...")
-        break
-    else:
-        print("❌ Opção inválida. Tente novamente.")
+
+def executar():
+    """Controla o fluxo principal da aplicação."""
+    while True:
+        exibir_menu()
+        opcao = input("\nEscolha uma opção: ").strip()
+        
+        match opcao:
+            case "1": cadastrar_usuario()
+            case "2": listar_usuarios()
+            case "3": buscar_usuario()
+            case "4": 
+                print(MSG_SAINDO)
+                break
+            case _: print(MSG_OPCAO_INVALIDA)
+
+# Inicialização do sistema
+if __name__ == "__main__":
+    executar()
